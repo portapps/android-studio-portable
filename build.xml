@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="android-studio" basedir=".">
+
+  <dirname property="app.basedir" file="${ant.file.android-studio}"/>
+  <property name="build.properties" value="${app.basedir}/build.properties"/>
+  <property file="${build.properties}"/>
+
+  <!-- Load Portapps core build -->
+  <property name="core.basedir" location="${app.basedir}\${core.dir}"/>
+  <fail unless="core.basedir" message="Core directory '${core.basedir}' not found in ${core.basedir}"/>
+  <echo message="Core found in ${core.basedir}" level="debug"/>
+
+  <!-- Import build-app.xml  -->
+  <import file="${core.basedir}\.build\build-app.xml"/>
+
+  <!-- Targets -->
+  <target name="release" depends="release.app" description="Release"/>
+
+  <target name="prepare">
+    <echo message="Preparing release..."/>
+
+    <move todir="${tmp.path}\extract2">
+      <fileset dir="${extract.path}\android-studio"/>
+    </move>
+    <delete dir="${extract.path}"/>
+    <move todir="${extract.path}">
+      <fileset dir="${tmp.path}\extract2"/>
+    </move>
+    <delete file="${extract.path}\uninstall.exe"/>
+  </target>
+
+</project>
