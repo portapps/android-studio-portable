@@ -55,7 +55,8 @@ idea.log.path={{ DATA_PATH }}/log`, "{{ DATA_PATH }}", utl.FormatUnixPath(app.Da
 	// https://developer.android.com/studio/command-line/variables
 	utl.OverrideEnv("ANDROID_HOME", utl.PathJoin(app.DataPath, "sdk"))
 	utl.OverrideEnv("ANDROID_SDK_ROOT", utl.PathJoin(app.DataPath, "sdk"))
-	utl.OverrideEnv("ANDROID_EMULATOR_HOME", utl.PathJoin(app.DataPath, "emulator"))
+	utl.OverrideEnv("ANDROID_SDK_HOME", utl.PathJoin(app.DataPath, ".android"))
+	utl.OverrideEnv("GRADLE_USER_HOME", utl.PathJoin(app.DataPath, ".gradle"))
 
 	// https://developer.android.com/studio/intro/studio-config
 	utl.OverrideEnv("STUDIO_PROPERTIES", studioPropPath)
