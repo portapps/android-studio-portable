@@ -7,6 +7,7 @@
   <a href="https://github.com/portapps/portapps"><img src="https://img.shields.io/badge/portapps-1.24.1-479fdb.svg?style=flat-square" alt="Portapps version"></a>
   <a href="https://goreportcard.com/report/github.com/portapps/android-studio-portable"><img src="https://goreportcard.com/badge/github.com/portapps/android-studio-portable?style=flat-square" alt="Go Report"></a>
   <a href="https://www.codacy.com/app/portapps/android-studio-portable"><img src="https://img.shields.io/codacy/grade/8f583d9581754ffca31c72f396d8da23.svg?style=flat-square" alt="Code Quality"></a>
+  <br /><a href="https://www.patreon.com/crazymax"><img src="https://img.shields.io/badge/donate-patreon-fb664e.svg?style=flat-square" alt="Support me on Patreon"></a>
   <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WQD7AQGPDEPSG"><img src="https://img.shields.io/badge/donate-paypal-7057ff.svg?style=flat-square" alt="Donate Paypal"></a>
 </p>
 
