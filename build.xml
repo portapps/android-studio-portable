@@ -20,11 +20,11 @@
     <echo message="Preparing release..."/>
 
     <move todir="${tmp.path}\extract2">
-      <fileset dir="${extract.path}\android-studio"/>
+      <fileset dir="${extract.path}\android-studio" defaultexcludes="no"/>
     </move>
     <delete dir="${extract.path}"/>
     <move todir="${extract.path}">
-      <fileset dir="${tmp.path}\extract2"/>
+      <fileset dir="${tmp.path}\extract2" defaultexcludes="no"/>
     </move>
     <delete file="${extract.path}\uninstall.exe"/>
   </target>
