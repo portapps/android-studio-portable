@@ -1,0 +1,9 @@
+version: 1
+update_configs:
+  # go modules
+  - package_manager: "go:modules"
+    directory: "/"
+    update_schedule: "weekly"
+    default_labels:
+      - ":game_die: dependencies"
+      - ":robot: bot"
