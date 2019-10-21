@@ -10,7 +10,7 @@ on:
       - 'go.sum'
 
 jobs:
-  check:
+  fix:
     runs-on: ubuntu-latest
     steps:
       -
