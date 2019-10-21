@@ -3,7 +3,7 @@ update_configs:
   # go modules
   - package_manager: "go:modules"
     directory: "/"
-    update_schedule: "weekly"
+    update_schedule: "daily"
     default_labels:
       - ":game_die: dependencies"
       - ":robot: bot"
