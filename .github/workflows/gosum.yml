@@ -1,4 +1,4 @@
-name: master
+name: gosum
 
 on:
   push:
