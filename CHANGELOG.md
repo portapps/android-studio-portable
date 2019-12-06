@@ -2,6 +2,10 @@
 
 ## 3.5.2-7 (2019/11/07)
 
+* Android Studio 3.5.3
+
+## 3.5.2-7 (2019/11/07)
+
 * Android Studio 3.5.2
 * Portapps 1.30.1
 
