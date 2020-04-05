@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.6.2-11 (2020/04/05)
+
+* Android Studio 3.6.2
+
 ## 3.6.1-10 (2020/03/05)
 
 * Fix download link (#7)
