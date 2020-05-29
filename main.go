@@ -68,5 +68,6 @@ idea.log.path={{ DATA_PATH }}/log`, "{{ DATA_PATH }}", utl.FormatUnixPath(app.Da
 		utl.CopyFile(utl.PathJoin(app.DataPath, vmOptionsFile), utl.PathJoin(app.AppPath, "bin", studioVmOptionsFile))
 	}
 
+	defer app.Close()
 	app.Launch(os.Args[1:])
 }
