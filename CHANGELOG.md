@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0-13 (2020/06/21)
+
+* Android Studio 4.0.0
+* Portapps 2.4.4
+
 ## 3.6.3-12 (2020/04/22)
 
 * Android Studio 3.6.3
