@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1-14 (2020/07/23)
+
+* Android Studio 4.0.1
+
 ## 4.0.0-13 (2020/06/21)
 
 * Android Studio 4.0.0
