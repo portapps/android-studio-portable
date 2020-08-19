@@ -4,7 +4,6 @@ package main
 
 import (
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/portapps/portapps/v2"
@@ -30,15 +29,8 @@ func init() {
 }
 
 func main() {
-	studioExe := "studio.exe"
-	studioVmOptionsFile := "studio.exe.vmoptions"
-	if runtime.GOARCH == "amd64" {
-		studioExe = "studio64.exe"
-		studioVmOptionsFile = "studio64.exe.vmoptions"
-	}
-
 	utl.CreateFolder(app.DataPath)
-	app.Process = utl.PathJoin(app.AppPath, "bin", studioExe)
+	app.Process = utl.PathJoin(app.AppPath, "bin", "studio64.exe")
 	app.WorkingDir = utl.PathJoin(app.AppPath, "bin")
 
 	// override idea.properties
@@ -63,9 +55,9 @@ idea.log.path={{ DATA_PATH }}/log`, "{{ DATA_PATH }}", utl.FormatUnixPath(app.Da
 	utl.OverrideEnv("STUDIO_PROPERTIES", studioPropPath)
 	utl.OverrideEnv("STUDIO_VM_OPTIONS", utl.PathJoin(app.DataPath, vmOptionsFile))
 	if !utl.Exists(utl.PathJoin(app.DataPath, vmOptionsFile)) {
-		utl.CopyFile(utl.PathJoin(app.AppPath, "bin", studioVmOptionsFile), utl.PathJoin(app.DataPath, vmOptionsFile))
+		utl.CopyFile(utl.PathJoin(app.AppPath, "bin", "studio64.exe.vmoptions"), utl.PathJoin(app.DataPath, vmOptionsFile))
 	} else {
-		utl.CopyFile(utl.PathJoin(app.DataPath, vmOptionsFile), utl.PathJoin(app.AppPath, "bin", studioVmOptionsFile))
+		utl.CopyFile(utl.PathJoin(app.DataPath, vmOptionsFile), utl.PathJoin(app.AppPath, "bin", "studio64.exe.vmoptions"))
 	}
 
 	defer app.Close()
