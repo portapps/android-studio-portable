@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.1.2-16 (2021/03/05)
+
+* Android Studio 4.1.2
+* Portapps 3.3.0
+* Go 1.16
+
 ## 4.1.0-15 (2020/10/15)
 
 * Android Studio 4.1.0
