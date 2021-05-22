@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.2.1-17 (2021/05/22)
+
+* Android Studio 4.2.1
+
 ## 4.1.2-16 (2021/03/05)
 
 * Android Studio 4.1.2
