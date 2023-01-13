@@ -1,5 +1,9 @@
 # Changelog
 
+## 2022.1.1.19 (2023/01/13)
+
+* Android Studio Electric Eel | 2022.1.1.19
+
 ## 2021.3.1.16 (2022/09/16)
 
 * Android Studio Dolphin | 2021.3.1.16
