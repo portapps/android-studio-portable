@@ -1,5 +1,15 @@
 # Changelog
 
+## 2022.1.1.19 (2023/01/13)
+
+* Android Studio Electric Eel | 2022.1.1.19
+
+## 2021.3.1.16 (2022/09/16)
+
+* Android Studio Dolphin | 2021.3.1.16
+* Portapps 3.6.0
+* Go 1.18
+
 ## 4.2.1-17 (2021/05/22)
 
 * Android Studio 4.2.1
