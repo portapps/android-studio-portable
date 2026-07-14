@@ -1,0 +1,273 @@
+name: update-app
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * *'
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    environment: update-app # secrets are gated by this environment
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      -
+        name: GitHub auth token from GitHub App
+        id: write-app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PORTAPPS_BOT_CLIENT_ID }}
+          private-key: ${{ secrets.PORTAPPS_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          token: ${{ steps.write-app.outputs.token }}
+          fetch-depth: 0
+          persist-credentials: false
+      -
+        name: Update Android Studio
+        id: update
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const updatesUrl = 'https://dl.google.com/android/studio/patches/updates.xml';
+
+            function workspacePath(relativePath) {
+              return path.join(process.env.GITHUB_WORKSPACE, relativePath);
+            }
+
+            function readFile(relativePath) {
+              return fs.readFileSync(workspacePath(relativePath), 'utf8');
+            }
+
+            function writeFile(relativePath, content) {
+              fs.writeFileSync(workspacePath(relativePath), content, 'utf8');
+            }
+
+            function propertyValue(content, name) {
+              const pattern = new RegExp(`^${name.replaceAll('.', '\\.')}\\s*=\\s*(.+)$`, 'm');
+              const match = content.match(pattern);
+              if (!match) {
+                throw new Error(`Missing ${name} in build.properties`);
+              }
+              return match[1].trim();
+            }
+
+            function replaceProperty(content, name, value) {
+              const pattern = new RegExp(`^(${name.replaceAll('.', '\\.')}\\s*=\\s*).+$`, 'm');
+              if (!pattern.test(content)) {
+                throw new Error(`Missing ${name} in build.properties`);
+              }
+              return content.replace(pattern, `$1${value}`);
+            }
+
+            function decodeXmlAttribute(value) {
+              return value
+                .replaceAll('&quot;', '"')
+                .replaceAll('&apos;', "'")
+                .replaceAll('&lt;', '<')
+                .replaceAll('&gt;', '>')
+                .replaceAll('&amp;', '&');
+            }
+
+            function attributeValue(attributes, name) {
+              const pattern = new RegExp(`\\b${name}="([^"]*)"`);
+              const match = attributes.match(pattern);
+              return match ? decodeXmlAttribute(match[1]) : '';
+            }
+
+            function versionParts(version) {
+              if (!/^\d+(?:\.\d+)*$/.test(version)) {
+                throw new Error(`Invalid version: ${version}`);
+              }
+              return version.split('.').map(Number);
+            }
+
+            function compareVersions(left, right) {
+              const leftParts = versionParts(left);
+              const rightParts = versionParts(right);
+              for (let i = 0; i < Math.max(leftParts.length, rightParts.length); i++) {
+                const diff = (leftParts[i] || 0) - (rightParts[i] || 0);
+                if (diff !== 0) {
+                  return diff;
+                }
+              }
+              return 0;
+            }
+
+            function appVersion(versionLabel) {
+              const match = versionLabel.match(/\d+(?:\.\d+)+/);
+              if (!match) {
+                throw new Error(`Cannot resolve Android Studio version from label: ${versionLabel}`);
+              }
+              return match[0];
+            }
+
+            function patchNumber(versionLabel) {
+              const match = versionLabel.match(/\bPatch\s+(\d+)\b/i);
+              return match ? Number(match[1]) : 0;
+            }
+
+            function compareBuildNumbers(left, right) {
+              return compareVersions(left.replace(/^AI-/, ''), right.replace(/^AI-/, ''));
+            }
+
+            function latestStableBuild(updatesXml) {
+              const channelMatch = updatesXml.match(/<channel\b(?=[^>]*\bid="AI-1-release")[^>]*>([\s\S]*?)<\/channel>/);
+              if (!channelMatch) {
+                throw new Error(`Cannot find Android Studio stable release channel in ${updatesUrl}`);
+              }
+
+              const builds = [...channelMatch[1].matchAll(/<build\b([^>]*)>([\s\S]*?)<\/build>/g)].map((match) => {
+                const attributes = match[1];
+                const body = match[2];
+                const versionLabel = attributeValue(attributes, 'version');
+                const number = attributeValue(attributes, 'number');
+                const downloadMatch = body.match(/<button\b(?=[^>]*\bdownload="true")([^>]*)\/>/);
+                const downloadUrl = downloadMatch ? attributeValue(downloadMatch[1], 'url') : '';
+                if (!versionLabel || !number || !downloadUrl) {
+                  return null;
+                }
+                return {
+                  version: appVersion(versionLabel),
+                  versionLabel,
+                  patch: patchNumber(versionLabel),
+                  number,
+                  downloadUrl
+                };
+              }).filter(Boolean);
+
+              if (builds.length === 0) {
+                throw new Error(`Cannot find Android Studio stable builds in ${updatesUrl}`);
+              }
+
+              builds.sort((left, right) => {
+                const versionDiff = compareVersions(left.version, right.version);
+                if (versionDiff !== 0) {
+                  return versionDiff;
+                }
+                const patchDiff = left.patch - right.patch;
+                if (patchDiff !== 0) {
+                  return patchDiff;
+                }
+                return compareBuildNumbers(left.number, right.number);
+              });
+
+              return builds.at(-1);
+            }
+
+            function windowsZipUrl(downloadPage, version) {
+              const urls = [...downloadPage.matchAll(/https:\/\/[^"'<>\s]+\/android\/studio\/ide-zips\/([^/"'<>\s]+)\/([^/"'<>\s]*windows\.zip)(?=["'<>\s]|$)/g)]
+                .map((match) => ({
+                  url: match[0],
+                  packageVersion: match[1],
+                  filename: match[2]
+                }));
+              const matchingUrls = urls.filter((candidate) =>
+                candidate.packageVersion === version || candidate.packageVersion.startsWith(`${version}.`)
+              );
+              if (matchingUrls.length === 0) {
+                throw new Error(`Cannot find a Windows zip download for Android Studio ${version}. Found: ${JSON.stringify(urls)}`);
+              }
+              matchingUrls.sort((left, right) => compareVersions(left.packageVersion, right.packageVersion));
+              return matchingUrls.at(-1).url;
+            }
+
+            async function fetchText(url) {
+              const response = await fetch(url, {
+                headers: {
+                  'user-agent': 'portapps/android-studio-portable update-app'
+                }
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+              }
+              return await response.text();
+            }
+
+            async function verifyDownloadUrl(url) {
+              const response = await fetch(url, {
+                method: 'HEAD',
+                headers: {
+                  'user-agent': 'portapps/android-studio-portable update-app'
+                }
+              });
+              if (!response.ok) {
+                throw new Error(`Android Studio Windows zip is not downloadable: ${url} returned ${response.status} ${response.statusText}`);
+              }
+              const contentType = response.headers.get('content-type') || '';
+              if (!contentType.includes('zip')) {
+                core.warning(`Unexpected content type for ${url}: ${contentType}`);
+              }
+            }
+
+            const latest = latestStableBuild(await fetchText(updatesUrl));
+            const artifactUrl = windowsZipUrl(await fetchText(latest.downloadUrl), latest.version);
+            await verifyDownloadUrl(artifactUrl);
+
+            core.info(`Resolved latest stable Android Studio build: ${JSON.stringify(latest)}`);
+            core.info(`Resolved Windows zip: ${artifactUrl}`);
+
+            const relativePath = 'build.properties';
+            const currentContent = readFile(relativePath);
+            const currentVersion = propertyValue(currentContent, 'app.version');
+            const currentRelease = Number(propertyValue(currentContent, 'app.release'));
+            if (!Number.isInteger(currentRelease)) {
+              throw new Error(`Invalid app.release in ${relativePath}: ${currentRelease}`);
+            }
+
+            let updatedContent = currentContent;
+            updatedContent = replaceProperty(updatedContent, 'app.version', latest.version);
+            updatedContent = replaceProperty(updatedContent, 'atf.win64.url', artifactUrl);
+
+            const appChanged = updatedContent !== currentContent;
+            const nextRelease = appChanged ? currentRelease + 1 : currentRelease;
+            updatedContent = replaceProperty(updatedContent, 'app.release', String(nextRelease));
+
+            if (updatedContent !== currentContent) {
+              writeFile(relativePath, updatedContent);
+              core.info(`Updated ${relativePath}`);
+            } else {
+              core.info(`${relativePath} is already up to date`);
+            }
+
+            core.setOutput('title', `Android Studio ${latest.version}`);
+            core.setOutput('version', latest.version);
+            core.setOutput('version-label', latest.versionLabel);
+            core.setOutput('previous-version', currentVersion);
+            core.setOutput('release', String(nextRelease));
+      -
+        name: Create pull request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          base: ${{ github.event.repository.default_branch }}
+          branch: update-android-studio
+          token: ${{ steps.write-app.outputs.token }}
+          commit-message: ${{ steps.update.outputs.title }}
+          title: ${{ steps.update.outputs.title }}
+          signoff: true
+          sign-commits: true
+          delete-branch: true
+          body: |
+            This updates Android Studio to ${{ steps.update.outputs.version-label }}.
