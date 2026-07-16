@@ -239,10 +239,10 @@ jobs:
 
             let updatedContent = currentContent;
             updatedContent = replaceProperty(updatedContent, 'app.version', latest.version);
+            const versionChanged = updatedContent !== currentContent;
             updatedContent = replaceProperty(updatedContent, 'atf.win64.url', artifactUrl);
 
-            const appChanged = updatedContent !== currentContent;
-            const nextRelease = appChanged ? currentRelease + 1 : currentRelease;
+            const nextRelease = versionChanged ? currentRelease + 1 : currentRelease;
             updatedContent = replaceProperty(updatedContent, 'app.release', String(nextRelease));
 
             if (updatedContent !== currentContent) {
