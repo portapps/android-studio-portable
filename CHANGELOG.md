@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.1.4-18 (2026/09/27)
+
+* Android Studio 2026.1.4
+* Keep Android SDK user data in the portable data dir
+* Portapps 3.19.0
+
 ## 4.2.1-17 (2021/05/22)
 
 * Android Studio 4.2.1
