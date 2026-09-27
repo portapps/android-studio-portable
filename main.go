@@ -49,9 +49,14 @@ idea.log.path={{ DATA_PATH }}/log`, "{{ DATA_PATH }}", strings.ReplaceAll(app.Da
 	}
 
 	// https://developer.android.com/studio/command-line/variables
-	os.Setenv("ANDROID_HOME", filepath.Join(app.DataPath, "sdk"))
-	os.Setenv("ANDROID_SDK_ROOT", filepath.Join(app.DataPath, "sdk"))
-	os.Setenv("ANDROID_SDK_HOME", filepath.Join(app.DataPath, ".android"))
+	sdkPath := filepath.Join(app.DataPath, "sdk")
+	androidUserPath := filepath.Join(app.DataPath, ".android")
+	os.Setenv("ANDROID_HOME", sdkPath)
+	os.Setenv("ANDROID_SDK_ROOT", sdkPath)
+	os.Setenv("ANDROID_SDK_HOME", app.DataPath)
+	os.Setenv("ANDROID_USER_HOME", androidUserPath)
+	os.Setenv("ANDROID_EMULATOR_HOME", androidUserPath)
+	os.Setenv("ANDROID_AVD_HOME", filepath.Join(androidUserPath, "avd"))
 	os.Setenv("GRADLE_USER_HOME", filepath.Join(app.DataPath, ".gradle"))
 
 	// https://developer.android.com/studio/intro/studio-config
